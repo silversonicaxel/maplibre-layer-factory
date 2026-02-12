@@ -40,8 +40,22 @@ export class MapLibreLayerFactory implements IControl {
 
         requestAnimationFrame(() => {
             if (!this._container || !this._container.parentElement) return;
-            const isLeft = this._container.parentElement.className.includes('left');
+            const parentClasses = this._container.parentElement.className;
+
+            // 1. Horizontal Alignment (Left vs Right)
+            const isLeft = parentClasses.includes('left');
             this._container.style.alignItems = isLeft ? 'flex-start' : 'flex-end';
+
+            // 2. Vertical Stacking (Top vs Bottom)
+            const isBottom = parentClasses.includes('bottom');
+
+            // If it's at the bottom, we reverse the flex order to put panel above button
+            // Note: We keep 'column' logic for vertical layouts;
+            // flexDirection handles the visual "order" of the children.
+            this._container.style.flexDirection = isBottom ? 'column-reverse' : 'column';
+
+            // Adjust the gap direction for the reverse layout if necessary
+            this._container.style.justifyContent = isBottom ? 'flex-end' : 'flex-start';
         });
 
         const btnGroup = document.createElement('div');

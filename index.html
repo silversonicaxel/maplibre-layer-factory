@@ -30,7 +30,7 @@
     });
 
     // Add your plugin
-    map.addControl(new MapLibreLayerFactory({ orientation: "horizontal" }), 'top-left');
+    map.addControl(new MapLibreLayerFactory({ orientation: "vertical" }), 'top-right');
     map.on("load", () => {
         map.addSource("osm", {
             type: "raster",
