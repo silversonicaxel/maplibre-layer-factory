@@ -82,10 +82,20 @@ export class MapLibreLayerFactory implements IControl {
 
         this._map.on('styledata', this.#boundUpdate);
 
+        // if (this._map.isStyleLoaded()) {
+        //     this.#updateLayerList();
+        // } else {
+        //     this._map.once('load', () => this.#updateLayerList());
+        // }
+
         if (this._map.isStyleLoaded()) {
+            this.#enforceOneLayerSelection(); // Fix initial state
             this.#updateLayerList();
         } else {
-            this._map.once('load', () => this.#updateLayerList());
+            this._map.once('load', () => {
+                this.#enforceOneLayerSelection(); // Fix initial state
+                this.#updateLayerList();
+            });
         }
 
         return this._container;
@@ -199,8 +209,19 @@ export class MapLibreLayerFactory implements IControl {
 
     #toggleLayer(layerId: string) {
         if (!this._map) return;
-        const current = this._map.getLayoutProperty(layerId, 'visibility') ?? 'visible';
-        this._map.setLayoutProperty(layerId, 'visibility', current === 'visible' ? 'none' : 'visible');
+
+        const style = this._map.getStyle();
+        if (!style || !style.layers) return;
+
+        // Loop through all layers in the map
+        style.layers.forEach((layer) => {
+            // If it's the one we clicked, set to visible, otherwise hide it
+            const visibility = (layer.id === layerId) ? 'visible' : 'none';
+            this._map!.setLayoutProperty(layer.id, 'visibility', visibility);
+        });
+
+        // Refresh the UI to update button colors
+        this.#updateLayerList();
     }
 
     #togglePanel() {
@@ -208,6 +229,20 @@ export class MapLibreLayerFactory implements IControl {
         if (this._panel) {
             this._panel.style.display = this._isOpen ? 'flex' : 'none';
         }
+    }
+
+    #enforceOneLayerSelection() {
+        if (!this._map) return;
+        const layers = this._map.getStyle()?.layers;
+        if (!layers || layers.length === 0) return;
+
+        // The "First" layer becomes our master selection
+        const firstLayerId = layers[0]?.id;
+
+        layers.forEach((layer) => {
+            const visibility = (layer.id === firstLayerId) ? 'visible' : 'none';
+            this._map!.setLayoutProperty(layer.id, 'visibility', visibility);
+        });
     }
 
     onRemove(): void {
