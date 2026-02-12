@@ -1,9 +1,13 @@
-import type { IControl, Map } from 'maplibre-gl';
+import type { IControl, LayerSpecification, Map } from 'maplibre-gl';
 
 export type MapLibreLayerFactoryOrientation = 'horizontal' | 'vertical';
 
 export interface MapLibreLayerFactoryOptions {
     orientation?: MapLibreLayerFactoryOrientation;
+}
+
+export interface MapLibreLayerMetadata {
+    placeholder?: string;
 }
 
 export class MapLibreLayerFactory implements IControl {
@@ -23,9 +27,8 @@ export class MapLibreLayerFactory implements IControl {
     onAdd(map: Map): HTMLElement {
         this._map = map;
 
-        // 1. Transparent Parent Container
         this._container = document.createElement('div');
-        this._container.className = 'maplibregl-ctrl'; // Base class for positioning
+        this._container.className = 'maplibregl-ctrl';
         Object.assign(this._container.style, {
             display: 'flex',
             flexDirection: 'column',
@@ -35,25 +38,18 @@ export class MapLibreLayerFactory implements IControl {
             boxShadow: 'none'
         });
 
-        // AUTO-DETECTION: Wait until the element is added to the DOM
         requestAnimationFrame(() => {
             if (!this._container || !this._container.parentElement) return;
-
-            // MapLibre control containers have classes like 'maplibregl-ctrl-top-left'
-            const parentClasses = this._container.parentElement.className;
-            const isLeft = parentClasses.includes('left');
-
-            // Apply alignment based on which side of the map we are on
+            const isLeft = this._container.parentElement.className.includes('left');
             this._container.style.alignItems = isLeft ? 'flex-start' : 'flex-end';
         });
 
-        // 2. Button Group (Standard MapLibre look)
         const btnGroup = document.createElement('div');
         btnGroup.className = 'maplibregl-ctrl-group';
 
         const button = document.createElement('button');
         button.type = 'button';
-        button.style.width = '29px'; // Standard MapLibre button size
+        button.style.width = '29px';
         button.style.height = '29px';
         button.innerHTML = `
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; margin: auto;">
@@ -63,13 +59,11 @@ export class MapLibreLayerFactory implements IControl {
         button.onclick = () => this.#togglePanel();
         btnGroup.appendChild(button);
 
-        // 3. Panel Group (Detached)
         this._panel = document.createElement('div');
-        this._panel.className = 'maplibregl-ctrl-group'; // Gives it the same shadow/bg as buttons
+        this._panel.className = 'maplibregl-ctrl-group';
         Object.assign(this._panel.style, {
             display: 'none',
-            flexDirection: this._orientation === 'vertical' ? 'column' : 'row', // column or row
-            // width: '35px',
+            flexDirection: this._orientation === 'vertical' ? 'column' : 'row',
             width: 'auto',
             gap: '8px',
             maxHeight: '200px',
@@ -82,18 +76,12 @@ export class MapLibreLayerFactory implements IControl {
 
         this._map.on('styledata', this.#boundUpdate);
 
-        // if (this._map.isStyleLoaded()) {
-        //     this.#updateLayerList();
-        // } else {
-        //     this._map.once('load', () => this.#updateLayerList());
-        // }
-
         if (this._map.isStyleLoaded()) {
-            this.#enforceOneLayerSelection(); // Fix initial state
+            this.#enforceOneLayerSelection();
             this.#updateLayerList();
         } else {
             this._map.once('load', () => {
-                this.#enforceOneLayerSelection(); // Fix initial state
+                this.#enforceOneLayerSelection();
                 this.#updateLayerList();
             });
         }
@@ -102,11 +90,6 @@ export class MapLibreLayerFactory implements IControl {
     }
 
     #updateLayerList() {
-        this._orientation === 'vertical' ? this.#updateLayerListVertically() : this.#updateLayerListHorizontally();
-    }
-
-
-    #updateLayerListVertically() {
         if (!this._map || !this._panel) return;
         const style = this._map.getStyle();
         if (!style) return;
@@ -114,41 +97,47 @@ export class MapLibreLayerFactory implements IControl {
         this._panel.innerHTML = '';
         const layers = style.layers ?? [];
 
-        // 1. Update Panel for Vertical Layout
+        // Apply shared panel styling based on orientation
         Object.assign(this._panel.style, {
             display: this._isOpen ? 'flex' : 'none',
-            flexDirection: 'column',       // Buttons side-by-side
-            gap: '4px',                 // Space between buttons
+            flexDirection: this._orientation === 'vertical' ? 'column' : 'row',
+            gap: '8px',
             padding: '4px',
-            width: 'auto',              // Allow it to grow wider than the toggle
-            // minWidth: '29px',           // At least as wide as the toggle
-            // maxWidth: '300px',          // Prevent it from crossing the whole map
-            // overflowX: 'auto',          // Scroll horizontally if too many layers
-            // overflowY: 'hidden'
         });
 
         layers.forEach((layer) => {
+            const metadata = (layer.metadata || {}) as MapLibreLayerMetadata;
+            const placeholder = metadata.placeholder;
+
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.innerText = layer.id.substring(0, 3).toUpperCase();
+            btn.setAttribute('data-id', layer.id);
             btn.title = layer.id;
 
+            this.#setButtonContent(layer, btn, placeholder);
+
             const visibility = this._map!.getLayoutProperty(layer.id, 'visibility') ?? 'visible';
-            const isVisible = visibility === 'visible';
+            const isSelected = visibility === 'visible';
+
+            // Set initial ARIA state
+            btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
 
             Object.assign(btn.style, {
-                flex: '0 0 auto',       // Prevent buttons from shrinking
-                padding: '4px 8px',     // Horizontal padding for the 3 letters
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: placeholder ? '0' : '4px 8px',
                 width: '42px',
                 height: '42px',
-                border: 'none',
-                borderRadius: '4px',    // Rounded look for horizontal chips
+                border: isSelected ? '2px solid #007cbf' : 'none',
+                borderRadius: '4px',
                 cursor: 'pointer',
                 fontSize: '10px',
                 fontWeight: 'bold',
-                backgroundColor: isVisible ? '#e0f0ff' : '#f5f5f5',
-                color: isVisible ? '#007cbf' : '#666',
-                whiteSpace: 'nowrap'    // Keep text on one line
+                backgroundColor: isSelected ? '#e0f0ff' : '#f5f5f5',
+                color: isSelected ? '#007cbf' : '#666',
+                whiteSpace: 'nowrap',
+                boxSizing: 'border-box'
             });
 
             btn.onclick = () => this.#toggleLayer(layer.id);
@@ -156,79 +145,62 @@ export class MapLibreLayerFactory implements IControl {
         });
     }
 
-    #updateLayerListHorizontally() {
-        if (!this._map || !this._panel) return;
-        const style = this._map.getStyle();
-        if (!style) return;
-
-        this._panel.innerHTML = '';
-        const layers = style.layers ?? [];
-
-        // 1. Update Panel for Horizontal Layout
-        Object.assign(this._panel.style, {
-            display: this._isOpen ? 'flex' : 'none',
-            flexDirection: 'row',       // Buttons side-by-side
-            gap: '4px',                 // Space between buttons
-            padding: '4px',
-            width: 'auto',              // Allow it to grow wider than the toggle
-            // minWidth: '29px',           // At least as wide as the toggle
-            // maxWidth: '300px',          // Prevent it from crossing the whole map
-            // overflowX: 'auto',          // Scroll horizontally if too many layers
-            // overflowY: 'hidden'
-        });
-
-        layers.forEach((layer) => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.innerText = layer.id.substring(0, 3).toUpperCase();
-            btn.title = layer.id;
-
-            const visibility = this._map!.getLayoutProperty(layer.id, 'visibility') ?? 'visible';
-            const isVisible = visibility === 'visible';
-
-            // 2. Button Styling for Horizontal Row
-            Object.assign(btn.style, {
-                flex: '0 0 auto',       // Prevent buttons from shrinking
-                padding: '4px 8px',     // Horizontal padding for the 3 letters
-                width: '42px',
-                height: '42px',
-                border: 'none',
-                borderRadius: '4px',    // Rounded look for horizontal chips
-                cursor: 'pointer',
-                fontSize: '10px',
-                fontWeight: 'bold',
-                backgroundColor: isVisible ? '#e0f0ff' : '#f5f5f5',
-                color: isVisible ? '#007cbf' : '#666',
-                whiteSpace: 'nowrap'    // Keep text on one line
+    #setButtonContent(layer: LayerSpecification, btn: HTMLButtonElement, placeholder?: string) {
+        if (placeholder) {
+            const img = document.createElement('img');
+            img.src = placeholder;
+            Object.assign(img.style, {
+                width: '100%',
+                height: '100%',
+                display: 'block',
+                objectFit: 'cover',
+                borderRadius: '2px',
+                pointerEvents: 'none'
             });
 
-            btn.onclick = () => this.#toggleLayer(layer.id);
-            this._panel!.appendChild(btn);
-        });
+            const visibility = this._map?.getLayoutProperty(layer.id, 'visibility') ?? 'visible';
+            img.style.opacity = visibility === 'visible' ? '1' : '0.6';
+
+            img.onerror = () => {
+                img.remove();
+                btn.innerText = layer.id.substring(0, 3).toUpperCase();
+            };
+            btn.appendChild(img);
+        } else {
+            btn.innerText = layer.id.substring(0, 3).toUpperCase();
+        }
     }
 
     #toggleLayer(layerId: string) {
-        if (!this._map) return;
+        if (!this._map || !this._panel) return;
 
         const style = this._map.getStyle();
         if (!style || !style.layers) return;
 
-        // Loop through all layers in the map
         style.layers.forEach((layer) => {
-            // If it's the one we clicked, set to visible, otherwise hide it
-            const visibility = (layer.id === layerId) ? 'visible' : 'none';
+            const isSelected = layer.id === layerId;
+            const visibility = isSelected ? 'visible' : 'none';
+
+            // 1. Update Map
             this._map!.setLayoutProperty(layer.id, 'visibility', visibility);
+
+            // 2. Update existing Button in DOM (No re-render needed!)
+            const btn = this._panel!.querySelector(`[data-id="${layer.id}"]`) as HTMLButtonElement;
+            if (btn) {
+                btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+
+                Object.assign(btn.style, {
+                    border: isSelected ? '2px solid #007cbf' : 'none',
+                    backgroundColor: isSelected ? '#e0f0ff' : '#f5f5f5',
+                    color: isSelected ? '#007cbf' : '#666'
+                });
+
+                const img = btn.querySelector('img');
+                if (img) img.style.opacity = isSelected ? '1' : '0.6';
+            }
         });
 
-        // Refresh the UI to update button colors
-        this.#updateLayerList();
-    }
-
-    #togglePanel() {
-        this._isOpen = !this._isOpen;
-        if (this._panel) {
-            this._panel.style.display = this._isOpen ? 'flex' : 'none';
-        }
+        // REMOVED: this.#updateLayerList(); // Calling this was deleting your aria-pressed attributes!
     }
 
     #enforceOneLayerSelection() {
@@ -236,13 +208,18 @@ export class MapLibreLayerFactory implements IControl {
         const layers = this._map.getStyle()?.layers;
         if (!layers || layers.length === 0) return;
 
-        // The "First" layer becomes our master selection
         const firstLayerId = layers[0]?.id;
-
         layers.forEach((layer) => {
-            const visibility = (layer.id === firstLayerId) ? 'visible' : 'none';
-            this._map!.setLayoutProperty(layer.id, 'visibility', visibility);
+            const isVisible = layer.id === firstLayerId ? 'visible' : 'none';
+            this._map!.setLayoutProperty(layer.id, 'visibility', isVisible);
         });
+    }
+
+    #togglePanel() {
+        this._isOpen = !this._isOpen;
+        if (this._panel) {
+            this._panel.style.display = this._isOpen ? 'flex' : 'none';
+        }
     }
 
     onRemove(): void {
