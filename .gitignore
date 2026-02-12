@@ -1,7 +1,17 @@
+# Build artifacts
 node_modules
 dist
 
-.DS_Store
-*.log
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-.vscode
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
