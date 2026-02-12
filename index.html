@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plugin Test Sandbox</title>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" />
+  <link rel="stylesheet" href="./src/index.css" />
+  <style>
+    body { margin: 0; padding: 0; }
+    #map { width: 100vw; height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script type="module">
+    import { Map } from 'maplibre-gl';
+    import { MapLibreLayerFactory } from './src/index.ts';
+
+    const map = new Map({
+      container: 'map',
+      style: {
+        version: 8,
+        sources: {},
+        layers: []
+      },
+      center: [0, 0],
+      zoom: 2
+    });
+
+    // Add your plugin
+    map.addControl(new MapLibreLayerFactory({ orientation: "horizontal" }), 'top-left');
+    map.on("load", () => {
+        map.addSource("osm", {
+            type: "raster",
+            tiles: [
+                "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            ],
+            tileSize: 256,
+        });
+
+        map.addSource("landcover", {
+            type: "raster",
+            tiles: ["https://storage.googleapis.com/lcl_tiles/GLCLU2020/composite2020/{z}/{x}/{y}.png"],
+            tileSize: 256,
+        });
+
+        map.addLayer({
+            id: "osm-base",
+            type: "raster",
+            source: "osm",
+            layout: { visibility: "visible" },
+        });
+
+        map.addLayer({
+            id: "landcover-base",
+            type: "raster",
+            source: "landcover",
+            layout: { visibility: "none" },
+        });
+
+    });
+  </script>
+</body>
+</html>
