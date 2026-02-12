@@ -1,0 +1,22 @@
+/* Ensure buttons inside the panel don't fight with MapLibre defaults */
+.maplibregl-ctrl-group button {
+    box-shadow: none !important;
+}
+
+/* Optional: add a smooth transition when opening */
+.maplibregl-ctrl-group {
+    transition: all 0.2s ease-in-out;
+}
+
+.layer-factory-toggle span {
+    display: block;
+    width: 29px;
+    height: 29px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.layer-factory-toggle span svg {
+    display: block;
+}
