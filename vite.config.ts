@@ -7,15 +7,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   build: {
     lib: {
-      // The entry point for your plugin logic
       entry: resolve(__dirname, 'src/index.ts'),
-      name: 'MapLibreLayerCounter',
-      // This will output maplibre-layer-counter.js and .mjs
       fileName: 'maplibre-layer-counter',
       formats: ['es', 'umd'],
+      name: 'MapLibreLayerCounter',
     },
+    minify: 'esbuild',
     rollupOptions: {
-      // Externalize maplibre-gl so it's not bundled in
       external: ['maplibre-gl'],
       output: {
         globals: {
@@ -23,7 +21,6 @@ export default defineConfig({
         },
       },
     },
-    sourcemap: true, // Helpful for debugging
-    minify: 'esbuild',
+    sourcemap: true,
   },
 });

@@ -1,24 +1,19 @@
 {
-  "compilerOptions": {
-    /* Environment */
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "types": ["node"], // Requires npm install -D @types/node
-
-    /* Strictness & Safety */
-    "strict": true,
-    "noUncheckedIndexedAccess": true, // New 2026 standard for safety
-    "verbatimModuleSyntax": true,    // Modern way to handle type imports
-    "skipLibCheck": true,
-
-    /* Output (for Library Mode) */
-    "declaration": true,      // Generates your .d.ts files
-    "emitDeclarationOnly": true, // Let Vite handle the JS, TS handles types
-    "outDir": "./dist",
-    "declarationMap": true,   // Allows users to "Go to Definition" into your TS
-    "sourceMap": true
-  },
-  "include": ["src"]
+    "compilerOptions": {
+        "declaration": true,
+        "declarationMap": true,
+        "emitDeclarationOnly": true,
+        "lib": ["DOM", "DOM.Iterable", "ESNext"],
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "noUncheckedIndexedAccess": true,
+        "outDir": "./dist",
+        "skipLibCheck": true,
+        "sourceMap": true,
+        "strict": true,
+        "target": "ESNext",
+        "types": ["node"],
+        "verbatimModuleSyntax": true
+    },
+    "include": ["src"]
 }
