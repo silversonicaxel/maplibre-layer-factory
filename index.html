@@ -30,7 +30,9 @@
       zoom: 2
     });
 
-    map.addControl(new MapLibreLayerFactory({ orientation: "vertical" }), 'top-right');
+    const layerFactory = new MapLibreLayerFactory({ orientation: "horizontal" });
+    map.addControl(layerFactory, 'top-left');
+
     map.on("load", () => {
         map.addSource("osm", {
             type: "raster",
@@ -40,12 +42,13 @@
                 "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
             ],
             tileSize: 256,
+            attribution: "Open Street Map"
         });
-
         map.addSource("landcover", {
             type: "raster",
             tiles: ["https://storage.googleapis.com/lcl_tiles/GLCLU2020/composite2020/{z}/{x}/{y}.png"],
             tileSize: 256,
+            attribution: "Global Land Cover and Land Use 2000 and 2020"
         });
 
         map.addLayer({
@@ -54,7 +57,6 @@
             source: "osm",
             layout: { visibility: "visible" },
         });
-
         map.addLayer({
             id: "landcover-base",
             type: "raster",
@@ -64,7 +66,6 @@
               placeholder: 'https://placehold.co/40x40'
             }
         });
-
     });
   </script>
 </body>
