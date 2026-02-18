@@ -26,5 +26,16 @@
     "maplibre-gl": "^5.18.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1"
+  },
+  "author": {
+    "name": "Alessandro Rabitti ~ silversonicaxel",
+    "url": "https://github.com/silversonicaxel"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/silversonicaxel/maplibre-layer-factory"
+  },
+  "bugs": {
+    "url": "https://github.com/silversonicaxel/maplibre-layer-factory/issues"
   }
 }
