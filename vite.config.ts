@@ -8,9 +8,9 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
-      fileName: 'maplibre-layer-counter',
+      fileName: 'maplibre-layer-factory',
       formats: ['es', 'umd'],
-      name: 'MapLibreLayerCounter',
+      name: 'MapLibreLayerFactory',
     },
     minify: 'esbuild',
     rollupOptions: {
