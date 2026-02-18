@@ -24,9 +24,14 @@ export class MapLibreLayerFactory implements IControl {
     }
 
     #updateLayerList() {
-        if (!this.#map || !this.#panel) return;
+        if (!this.#map || !this.#panel) {
+            return;
+        }
+
         const style = this.#map.getStyle();
-        if (!style) return;
+        if (!style) {
+            return;
+        }
 
         this.#panel.innerHTML = '';
         const layers = style.layers ?? [];
@@ -34,8 +39,6 @@ export class MapLibreLayerFactory implements IControl {
         Object.assign(this.#panel.style, {
             display: this.#isOpen ? 'flex' : 'none',
             flexDirection: this.#orientation === 'vertical' ? 'column' : 'row',
-            gap: '8px',
-            padding: '4px',
         });
 
         layers.forEach((layer) => {
@@ -45,6 +48,7 @@ export class MapLibreLayerFactory implements IControl {
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.title = layer.id;
+            btn.className = 'layer-factory-panel-button';
             btn.setAttribute('data-id', layer.id);
 
             this.#setButtonContent(layer, btn, placeholder);
@@ -52,25 +56,15 @@ export class MapLibreLayerFactory implements IControl {
             const visibility = this.#map!.getLayoutProperty(layer.id, 'visibility') ?? 'visible';
             const isSelected = visibility === 'visible';
 
-            btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
-
             Object.assign(btn.style, {
-                alignItems: 'center',
                 backgroundColor: isSelected ? '#e0f0ff' : '#f5f5f5',
                 border: isSelected ? '2px solid #007cbf' : 'none',
-                borderRadius: '4px',
-                boxSizing: 'border-box',
                 color: isSelected ? '#007cbf' : '#666',
-                cursor: 'pointer',
-                display: 'flex',
-                fontSize: '10px',
-                fontWeight: 'bold',
-                height: '42px',
-                justifyContent: 'center',
                 padding: placeholder ? '0' : '4px 8px',
-                whiteSpace: 'nowrap',
-                width: '42px'
+
             });
+
+            btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
 
             btn.onclick = () => this.#toggleLayer(layer.id);
             this.#panel!.appendChild(btn);
@@ -81,18 +75,13 @@ export class MapLibreLayerFactory implements IControl {
         if (placeholder) {
             const img = document.createElement('img');
             img.src = placeholder;
+            img.className = 'layer-factory-panel-image';
 
             const visibility = this.#map?.getLayoutProperty(layer.id, 'visibility') ?? 'visible';
             const isVisible = visibility === 'visible';
 
             Object.assign(img.style, {
-                borderRadius: '2px',
-                display: 'block',
-                height: '100%',
-                objectFit: 'cover',
                 opacity: isVisible ? '1' : '0.6',
-                pointerEvents: 'none',
-                width: '100%'
             });
 
             img.onerror = () => {
@@ -164,16 +153,7 @@ export class MapLibreLayerFactory implements IControl {
         this.#map = map;
 
         this.#container = document.createElement('div');
-        this.#container.className = 'maplibregl-ctrl';
-
-        Object.assign(this.#container.style, {
-            backgroundColor: 'transparent',
-            border: 'none',
-            boxShadow: 'none',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px'
-        });
+        this.#container.className = 'maplibregl-ctrl layer-factory-container';
 
         requestAnimationFrame(() => {
             if (!this.#container || !this.#container.parentElement) {
@@ -206,16 +186,10 @@ export class MapLibreLayerFactory implements IControl {
         btnGroup.appendChild(button);
 
         this.#panel = document.createElement('div');
-        this.#panel.className = 'maplibregl-ctrl-group';
+        this.#panel.className = 'maplibregl-ctrl-group layer-factory-panel';
 
         Object.assign(this.#panel.style, {
-            display: 'none',
             flexDirection: this.#orientation === 'vertical' ? 'column' : 'row',
-            gap: '8px',
-            margin: '0',
-            maxHeight: '200px',
-            overflowY: 'auto',
-            width: 'auto'
         });
 
         this.#container.appendChild(btnGroup);
