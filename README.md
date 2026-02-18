@@ -16,7 +16,24 @@ The style is based on squared buttons that can be selected/deselected to show/hi
 npm install maplibre-layer-factory
 ```
 
-## Usage
+## Api
+
+### Layer Factory Options
+
+| Option | Type | Default | Description | Mandatory |
+| - | - | - | - | - |
+| `orientation` | "horizontal" \| "vertical" | "vertical" | Orientation of layers buttons | No |
+| `panelStyle` | CSSStyleDeclaration | {} | Custom styling for panel | No |
+| `layerButtonStyle.default`| CSSStyleDeclaration | {} | Custom styling for layer buttons in default state | No |
+| `layerButtonStyle.selected`| CSSStyleDeclaration | {} | Custom styling for layer buttons in selected state | No |
+
+### Layer Configuration Object
+
+| Property | Type | Default | Description | Mandatory |
+| - | - | - | - | - |
+| `metadata.placeholder` | string | undefined | URL to placeholder image for layer button | No |
+
+## Example
 
 The example below shows how to use the MapLibre Layer Factory to create a control with all available options.
 
