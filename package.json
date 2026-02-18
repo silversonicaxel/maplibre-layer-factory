@@ -1,6 +1,5 @@
 {
   "name": "maplibre-layer-factory",
-  "private": true,
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/maplibre-layer-factory.umd.cjs",
