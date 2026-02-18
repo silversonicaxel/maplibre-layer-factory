@@ -1,6 +1,7 @@
 # Build artifacts
 node_modules
 dist
+.vite
 
 # Editor files
 .vscode/
