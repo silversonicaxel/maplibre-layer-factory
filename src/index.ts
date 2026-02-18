@@ -31,7 +31,6 @@ export class MapLibreLayerFactory implements IControl {
         this.#panel.innerHTML = '';
         const layers = style.layers ?? [];
 
-        // Apply shared panel styling based on orientation
         Object.assign(this.#panel.style, {
             display: this.#isOpen ? 'flex' : 'none',
             flexDirection: this.#orientation === 'vertical' ? 'column' : 'row',
@@ -45,33 +44,32 @@ export class MapLibreLayerFactory implements IControl {
 
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.setAttribute('data-id', layer.id);
             btn.title = layer.id;
+            btn.setAttribute('data-id', layer.id);
 
             this.#setButtonContent(layer, btn, placeholder);
 
             const visibility = this.#map!.getLayoutProperty(layer.id, 'visibility') ?? 'visible';
             const isSelected = visibility === 'visible';
 
-            // Set initial ARIA state
             btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
 
             Object.assign(btn.style, {
-                display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                padding: placeholder ? '0' : '4px 8px',
-                width: '42px',
-                height: '42px',
+                backgroundColor: isSelected ? '#e0f0ff' : '#f5f5f5',
                 border: isSelected ? '2px solid #007cbf' : 'none',
                 borderRadius: '4px',
+                boxSizing: 'border-box',
+                color: isSelected ? '#007cbf' : '#666',
                 cursor: 'pointer',
+                display: 'flex',
                 fontSize: '10px',
                 fontWeight: 'bold',
-                backgroundColor: isSelected ? '#e0f0ff' : '#f5f5f5',
-                color: isSelected ? '#007cbf' : '#666',
+                height: '42px',
+                justifyContent: 'center',
+                padding: placeholder ? '0' : '4px 8px',
                 whiteSpace: 'nowrap',
-                boxSizing: 'border-box'
+                width: '42px'
             });
 
             btn.onclick = () => this.#toggleLayer(layer.id);
@@ -83,17 +81,19 @@ export class MapLibreLayerFactory implements IControl {
         if (placeholder) {
             const img = document.createElement('img');
             img.src = placeholder;
-            Object.assign(img.style, {
-                width: '100%',
-                height: '100%',
-                display: 'block',
-                objectFit: 'cover',
-                borderRadius: '2px',
-                pointerEvents: 'none'
-            });
 
             const visibility = this.#map?.getLayoutProperty(layer.id, 'visibility') ?? 'visible';
-            img.style.opacity = visibility === 'visible' ? '1' : '0.6';
+            const isVisible = visibility === 'visible';
+
+            Object.assign(img.style, {
+                borderRadius: '2px',
+                display: 'block',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: isVisible ? '1' : '0.6',
+                pointerEvents: 'none',
+                width: '100%'
+            });
 
             img.onerror = () => {
                 img.remove();
@@ -115,35 +115,41 @@ export class MapLibreLayerFactory implements IControl {
             const isSelected = layer.id === layerId;
             const visibility = isSelected ? 'visible' : 'none';
 
-            // 1. Update Map
             this.#map!.setLayoutProperty(layer.id, 'visibility', visibility);
 
-            // 2. Update existing Button in DOM (No re-render needed!)
             const btn = this.#panel!.querySelector(`[data-id="${layer.id}"]`) as HTMLButtonElement;
             if (btn) {
                 btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
 
                 Object.assign(btn.style, {
-                    border: isSelected ? '2px solid #007cbf' : 'none',
                     backgroundColor: isSelected ? '#e0f0ff' : '#f5f5f5',
+                    border: isSelected ? '2px solid #007cbf' : 'none',
                     color: isSelected ? '#007cbf' : '#666'
                 });
 
                 const img = btn.querySelector('img');
-                if (img) img.style.opacity = isSelected ? '1' : '0.6';
+                if (img) {
+                    img.style.opacity = isSelected ? '1' : '0.6';
+                }
             }
         });
     }
 
     #enforceOneLayerSelection() {
-        if (!this.#map) return;
+        if (!this.#map) {
+            return;
+        }
+
         const layers = this.#map.getStyle()?.layers;
-        if (!layers || layers.length === 0) return;
+        if (!layers || layers.length === 0) {
+            return;
+        }
 
         const firstLayerId = layers[0]?.id;
         layers.forEach((layer) => {
-            const isVisible = layer.id === firstLayerId ? 'visible' : 'none';
-            this.#map!.setLayoutProperty(layer.id, 'visibility', isVisible);
+            const isSelected = layer.id === firstLayerId;
+            const visibility = isSelected ? 'visible' : 'none';
+            this.#map!.setLayoutProperty(layer.id, 'visibility', visibility);
         });
     }
 
@@ -159,32 +165,28 @@ export class MapLibreLayerFactory implements IControl {
 
         this.#container = document.createElement('div');
         this.#container.className = 'maplibregl-ctrl';
+
         Object.assign(this.#container.style, {
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
             backgroundColor: 'transparent',
             border: 'none',
-            boxShadow: 'none'
+            boxShadow: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
         });
 
         requestAnimationFrame(() => {
-            if (!this.#container || !this.#container.parentElement) return;
+            if (!this.#container || !this.#container.parentElement) {
+                return;
+            }
+
             const parentClasses = this.#container.parentElement.className;
 
-            // 1. Horizontal Alignment (Left vs Right)
             const isLeft = parentClasses.includes('left');
             this.#container.style.alignItems = isLeft ? 'flex-start' : 'flex-end';
 
-            // 2. Vertical Stacking (Top vs Bottom)
             const isBottom = parentClasses.includes('bottom');
-
-            // If it's at the bottom, we reverse the flex order to put panel above button
-            // Note: We keep 'column' logic for vertical layouts;
-            // flexDirection handles the visual "order" of the children.
             this.#container.style.flexDirection = isBottom ? 'column-reverse' : 'column';
-
-            // Adjust the gap direction for the reverse layout if necessary
             this.#container.style.justifyContent = isBottom ? 'flex-end' : 'flex-start';
         });
 
@@ -205,14 +207,15 @@ export class MapLibreLayerFactory implements IControl {
 
         this.#panel = document.createElement('div');
         this.#panel.className = 'maplibregl-ctrl-group';
+
         Object.assign(this.#panel.style, {
             display: 'none',
             flexDirection: this.#orientation === 'vertical' ? 'column' : 'row',
-            width: 'auto',
             gap: '8px',
+            margin: '0',
             maxHeight: '200px',
             overflowY: 'auto',
-            margin: '0'
+            width: 'auto'
         });
 
         this.#container.appendChild(btnGroup);
