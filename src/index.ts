@@ -4,6 +4,11 @@ export type MapLibreLayerFactoryOrientation = 'horizontal' | 'vertical';
 
 export interface MapLibreLayerFactoryOptions {
     orientation?: MapLibreLayerFactoryOrientation;
+    panelStyle?: Partial<CSSStyleDeclaration>;
+    layerButtonStyle?: {
+        default?: Partial<CSSStyleDeclaration>;
+        selected?: Partial<CSSStyleDeclaration>;
+    };
 }
 
 export interface MapLibreLayerMetadata {
@@ -16,10 +21,20 @@ export class MapLibreLayerFactory implements IControl {
     #panel?: HTMLDivElement;
     #isOpen: boolean = false;
     #orientation: MapLibreLayerFactoryOrientation;
+    #panelStyle: Partial<CSSStyleDeclaration>;
+    #layerButtonStyle: {
+        default?: Partial<CSSStyleDeclaration>;
+        selected?: Partial<CSSStyleDeclaration>;
+    };
     #boundUpdate: () => void;
 
     constructor(options: MapLibreLayerFactoryOptions = {}) {
         this.#orientation = options.orientation || 'vertical';
+        this.#panelStyle = options.panelStyle || {};
+        this.#layerButtonStyle = options.layerButtonStyle || {
+            default: {},
+            selected: {}
+        };
         this.#boundUpdate = this.#updateLayerList.bind(this);
     }
 
@@ -31,12 +46,17 @@ export class MapLibreLayerFactory implements IControl {
         this.#panel.innerHTML = '';
         const layers = style.layers ?? [];
 
-        Object.assign(this.#panel.style, {
-            display: this.#isOpen ? 'flex' : 'none',
-            flexDirection: this.#orientation === 'vertical' ? 'column' : 'row',
-            gap: '8px',
-            padding: '4px',
-        });
+        Object.assign(this.#panel.style,
+            {
+                gap: '8px',
+                padding: '4px',
+            },
+            this.#panelStyle,
+            {
+                display: this.#isOpen ? (this.#panelStyle?.display || 'flex') : 'none',
+                flexDirection: this.#orientation === 'vertical' ? 'column' : 'row',
+            }
+        );
 
         layers.forEach((layer) => {
             const metadata = (layer.metadata || {}) as MapLibreLayerMetadata;
@@ -54,23 +74,28 @@ export class MapLibreLayerFactory implements IControl {
 
             btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
 
-            Object.assign(btn.style, {
-                alignItems: 'center',
-                backgroundColor: isSelected ? '#e0f0ff' : '#f5f5f5',
-                border: isSelected ? '2px solid #007cbf' : 'none',
-                borderRadius: '4px',
-                boxSizing: 'border-box',
-                color: isSelected ? '#007cbf' : '#666',
-                cursor: 'pointer',
-                display: 'flex',
-                fontSize: '10px',
-                fontWeight: 'bold',
-                height: '42px',
-                justifyContent: 'center',
-                padding: placeholder ? '0' : '4px 8px',
-                whiteSpace: 'nowrap',
-                width: '42px'
-            });
+            Object.assign(btn.style,
+                {
+                    backgroundColor: isSelected ? '#e0f0ff' : '#f5f5f5',
+                    border: isSelected ? '2px solid #007cbf' : 'none',
+                    borderRadius: '4px',
+                    color: isSelected ? '#007cbf' : '#666',
+                    fontSize: '10px',
+                    fontWeight: 'bold',
+                },
+                isSelected ? this.#layerButtonStyle.selected : this.#layerButtonStyle.default,
+                {
+                    alignItems: 'center',
+                    boxSizing: 'border-box',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    height: '42px',
+                    justifyContent: 'center',
+                    padding: placeholder ? '0' : '4px 8px',
+                    whiteSpace: 'nowrap',
+                    width: '42px'
+                }
+            );
 
             btn.onclick = () => this.#toggleLayer(layer.id);
             this.#panel!.appendChild(btn);
@@ -120,12 +145,6 @@ export class MapLibreLayerFactory implements IControl {
             const btn = this.#panel!.querySelector(`[data-id="${layer.id}"]`) as HTMLButtonElement;
             if (btn) {
                 btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
-
-                Object.assign(btn.style, {
-                    backgroundColor: isSelected ? '#e0f0ff' : '#f5f5f5',
-                    border: isSelected ? '2px solid #007cbf' : 'none',
-                    color: isSelected ? '#007cbf' : '#666'
-                });
 
                 const img = btn.querySelector('img');
                 if (img) {
