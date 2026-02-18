@@ -38,5 +38,14 @@
   },
   "bugs": {
     "url": "https://github.com/silversonicaxel/maplibre-layer-factory/issues"
-  }
+  },
+  "keywords": [
+    "map",
+    "maplibre",
+    "maplibre-gl-js",
+    "maplibre-layer-factory",
+    "layer-factory",
+    "plugin",
+    "control"
+  ]
 }
