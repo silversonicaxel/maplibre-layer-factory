@@ -1,3 +1,4 @@
+import './index.css';
 import type { IControl, LayerSpecification, Map } from 'maplibre-gl';
 
 export type MapLibreLayerFactoryOrientation = 'horizontal' | 'vertical';

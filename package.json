@@ -11,7 +11,8 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/maplibre-layer-factory.js",
       "require": "./dist/maplibre-layer-factory.umd.cjs"
-    }
+    },
+    "./style.css": "./dist/maplibre-layer-factory.css"
   },
   "files": [
     "dist"
