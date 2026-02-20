@@ -19,7 +19,9 @@ export interface MapLibreLayerMetadata {
 export class MapLibreLayerFactory implements IControl {
     #map?: Map;
     #container?: HTMLDivElement;
+    #toggle?: HTMLDivElement;
     #panel?: HTMLDivElement;
+    #panelLayers?: HTMLDivElement;
     #isOpen: boolean = false;
     #orientation: MapLibreLayerFactoryOrientation;
     #panelStyle: Partial<CSSStyleDeclaration>;
@@ -36,27 +38,139 @@ export class MapLibreLayerFactory implements IControl {
             default: {},
             selected: {}
         };
-        this.#boundUpdate = this.#updateLayerList.bind(this);
+        this.#boundUpdate = this.#setLayerList.bind(this);
     }
 
-    #updateLayerList() {
-        if (!this.#map || !this.#panel) return;
-        const style = this.#map.getStyle();
-        if (!style) return;
+    #createContainer() {
+        const container = document.createElement('div');
+        container.className = 'maplibregl-ctrl';
 
-        this.#panel.innerHTML = '';
+        Object.assign(container.style, {
+            backgroundColor: 'transparent',
+            border: 'none',
+            boxShadow: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
+        });
+
+        requestAnimationFrame(() => {
+            if (!container || !container.parentElement) {
+                return;
+            }
+
+            const parentClasses = container.parentElement.className;
+
+            const isLeft = parentClasses.includes('left');
+            container.style.alignItems = isLeft ? 'flex-start' : 'flex-end';
+
+            const isBottom = parentClasses.includes('bottom');
+            container.style.flexDirection = isBottom ? 'column-reverse' : 'column';
+            container.style.justifyContent = isBottom ? 'flex-end' : 'flex-start';
+        });
+
+        return container;
+    }
+
+    #createToggle() {
+        const toggle = document.createElement('div');
+        toggle.className = 'maplibregl-ctrl-group';
+
+        const toggleButton = document.createElement('button');
+        toggleButton.type = 'button';
+        toggleButton.style.width = '29px';
+        toggleButton.style.height = '29px';
+        toggleButton.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; margin: auto;">
+                <path d="M11.99 19.0048L4.62 13.2748L3 14.5348L12 21.5348L21 14.5348L19.37 13.2648L11.99 19.0048ZM12 16.4648L19.36 10.7348L21 9.46484L12 2.46484L3 9.46484L4.63 10.7348L12 16.4648ZM12 4.99484L17.74 9.46484L12 13.9348L6.26 9.46484L12 4.99484Z" fill="currentColor"/>
+            </svg>`;
+
+        toggleButton.onclick = () => this.#togglePanel();
+        toggle.appendChild(toggleButton);
+
+        return toggle;
+    }
+
+    #createPanel() {
+        const panel = document.createElement('div');
+        panel.className = 'maplibregl-ctrl-group';
+
+        Object.assign(panel.style,
+            {
+                gap: '8px',
+            },
+            this.#panelStyle,
+            {
+                display: 'none',
+                flexDirection: 'column',
+                overflowY: 'auto',
+                width: 'auto'
+            },
+        );
+
+        return panel;
+    }
+
+    #createPanelLayers() {
+        const panelLayers = document.createElement('div');
+
+        Object.assign(panelLayers.style, {
+            display: 'flex',
+            flexDirection: this.#orientation === 'vertical' ? 'column' : 'row',
+            gap: '8px',
+            margin: '0',
+            maxHeight: '200px',
+            overflowY: 'auto',
+            width: 'auto'
+        });
+
+        return panelLayers;
+    }
+
+    #togglePanel() {
+        this.#isOpen = !this.#isOpen;
+        if (this.#panel) {
+            this.#panel.style.display = this.#isOpen ? 'flex' : 'none';
+        }
+    }
+
+    #enforceOneLayerSelection() {
+        if (!this.#map) {
+            return;
+        }
+
+        const layers = this.#map.getStyle()?.layers;
+        if (!layers || layers.length === 0) {
+            return;
+        }
+
+        const firstLayerId = layers[0]?.id;
+        layers.forEach((layer) => {
+            const isSelected = layer.id === firstLayerId;
+            const visibility = isSelected ? 'visible' : 'none';
+            this.#map!.setLayoutProperty(layer.id, 'visibility', visibility);
+        });
+    }
+
+    #setLayerList() {
+        if (!this.#map || !this.#panel || !this.#panelLayers) {
+            return;
+        }
+
+        const style = this.#map.getStyle();
+        if (!style) {
+            return;
+        }
+
+        this.#panelLayers.innerHTML = '';
         const layers = style.layers ?? [];
 
-        Object.assign(this.#panel.style,
+        Object.assign(this.#panelLayers.style,
             {
                 gap: '8px',
                 padding: '4px',
             },
             this.#panelStyle,
-            {
-                display: this.#isOpen ? (this.#panelStyle?.display || 'flex') : 'none',
-                flexDirection: this.#orientation === 'vertical' ? 'column' : 'row',
-            }
         );
 
         layers.forEach((layer) => {
@@ -98,8 +212,8 @@ export class MapLibreLayerFactory implements IControl {
                 }
             );
 
-            btn.onclick = () => this.#toggleLayer(layer.id);
-            this.#panel!.appendChild(btn);
+            btn.onclick = () => this.#selectLayer(layer.id);
+            this.#panelLayers!.appendChild(btn);
         });
     }
 
@@ -131,11 +245,15 @@ export class MapLibreLayerFactory implements IControl {
         }
     }
 
-    #toggleLayer(layerId: string) {
-        if (!this.#map || !this.#panel) return;
+    #selectLayer(layerId: string) {
+        if (!this.#map || !this.#panel || !this.#panelLayers) {
+            return;
+        }
 
         const style = this.#map.getStyle();
-        if (!style || !style.layers) return;
+        if (!style || !style.layers) {
+            return;
+        }
 
         style.layers.forEach((layer) => {
             const isSelected = layer.id === layerId;
@@ -143,7 +261,7 @@ export class MapLibreLayerFactory implements IControl {
 
             this.#map!.setLayoutProperty(layer.id, 'visibility', visibility);
 
-            const btn = this.#panel!.querySelector(`[data-id="${layer.id}"]`) as HTMLButtonElement;
+            const btn = this.#panelLayers!.querySelector(`[data-id="${layer.id}"]`) as HTMLButtonElement;
             if (btn) {
                 btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
 
@@ -155,102 +273,28 @@ export class MapLibreLayerFactory implements IControl {
         });
     }
 
-    #enforceOneLayerSelection() {
-        if (!this.#map) {
-            return;
-        }
-
-        const layers = this.#map.getStyle()?.layers;
-        if (!layers || layers.length === 0) {
-            return;
-        }
-
-        const firstLayerId = layers[0]?.id;
-        layers.forEach((layer) => {
-            const isSelected = layer.id === firstLayerId;
-            const visibility = isSelected ? 'visible' : 'none';
-            this.#map!.setLayoutProperty(layer.id, 'visibility', visibility);
-        });
-    }
-
-    #togglePanel() {
-        this.#isOpen = !this.#isOpen;
-        if (this.#panel) {
-            this.#panel.style.display = this.#isOpen ? 'flex' : 'none';
-        }
+    #initializePanelLayers() {
+        this.#enforceOneLayerSelection();
+        this.#setLayerList();
     }
 
     onAdd(map: Map): HTMLElement {
         this.#map = map;
+        this.#container = this.#createContainer();
+        this.#toggle = this.#createToggle();
+        this.#panel = this.#createPanel();
+        this.#panelLayers = this.#createPanelLayers();
 
-        this.#container = document.createElement('div');
-        this.#container.className = 'maplibregl-ctrl';
-
-        Object.assign(this.#container.style, {
-            backgroundColor: 'transparent',
-            border: 'none',
-            boxShadow: 'none',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px'
-        });
-
-        requestAnimationFrame(() => {
-            if (!this.#container || !this.#container.parentElement) {
-                return;
-            }
-
-            const parentClasses = this.#container.parentElement.className;
-
-            const isLeft = parentClasses.includes('left');
-            this.#container.style.alignItems = isLeft ? 'flex-start' : 'flex-end';
-
-            const isBottom = parentClasses.includes('bottom');
-            this.#container.style.flexDirection = isBottom ? 'column-reverse' : 'column';
-            this.#container.style.justifyContent = isBottom ? 'flex-end' : 'flex-start';
-        });
-
-        const btnGroup = document.createElement('div');
-        btnGroup.className = 'maplibregl-ctrl-group';
-
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.style.width = '29px';
-        button.style.height = '29px';
-        button.innerHTML = `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block; margin: auto;">
-                <path d="M11.99 19.0048L4.62 13.2748L3 14.5348L12 21.5348L21 14.5348L19.37 13.2648L11.99 19.0048ZM12 16.4648L19.36 10.7348L21 9.46484L12 2.46484L3 9.46484L4.63 10.7348L12 16.4648ZM12 4.99484L17.74 9.46484L12 13.9348L6.26 9.46484L12 4.99484Z" fill="currentColor"/>
-            </svg>`;
-
-        button.onclick = () => this.#togglePanel();
-        btnGroup.appendChild(button);
-
-        this.#panel = document.createElement('div');
-        this.#panel.className = 'maplibregl-ctrl-group';
-
-        Object.assign(this.#panel.style, {
-            display: 'none',
-            flexDirection: this.#orientation === 'vertical' ? 'column' : 'row',
-            gap: '8px',
-            margin: '0',
-            maxHeight: '200px',
-            overflowY: 'auto',
-            width: 'auto'
-        });
-
-        this.#container.appendChild(btnGroup);
+        this.#panel.appendChild(this.#panelLayers);
+        this.#container.appendChild(this.#toggle);
         this.#container.appendChild(this.#panel);
 
         this.#map.on('styledata', this.#boundUpdate);
 
         if (this.#map.isStyleLoaded()) {
-            this.#enforceOneLayerSelection();
-            this.#updateLayerList();
+            this.#initializePanelLayers();
         } else {
-            this.#map.once('load', () => {
-                this.#enforceOneLayerSelection();
-                this.#updateLayerList();
-            });
+            this.#map.once('load', this.#initializePanelLayers.bind(this));
         }
 
         return this.#container;
