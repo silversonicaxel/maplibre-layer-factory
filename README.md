@@ -26,12 +26,19 @@ npm install maplibre-layer-factory
 | `panelStyle` | CSSStyleDeclaration | {} | Custom styling for panel | No |
 | `layerButtonStyle.default`| CSSStyleDeclaration | {} | Custom styling for layer buttons in default state | No |
 | `layerButtonStyle.selected`| CSSStyleDeclaration | {} | Custom styling for layer buttons in selected state | No |
+| `labelStyle.element`| CSSStyleDeclaration | {} | Custom styling for label element | No |
+| `labelStyle.tag`| CSSStyleDeclaration | {} | Custom styling for label tag | No |
+| `labelStyle.text`| CSSStyleDeclaration | {} | Custom styling for label text | No |
+| `labelStyle.caption`| CSSStyleDeclaration | {} | Custom styling for label caption | No |
+| `withLabel`| boolean | false | Show label | No |
 
 ### Layer Configuration Object
 
 | Property | Type | Default | Description | Mandatory |
 | - | - | - | - | - |
 | `metadata.placeholder` | string | undefined | URL to placeholder image for layer button | No |
+| `metadata.name` | string | undefined | Name of the layer | No |
+| `metadata.caption` | string | undefined | Caption of the layer | No |
 
 ## Plugin Html Structure
 
@@ -39,6 +46,7 @@ npm install maplibre-layer-factory
     - toggle
     - panel
         - panel layers
+        - panel label
 
 ## Example
 
@@ -61,7 +69,22 @@ const layerFactory = new MapLibreLayerFactory({
             border: "2px solid blue",
             color: "blue"
         }
-    }
+    },
+    labelStyle: {
+        element: {
+            backgroundColor: "blue"
+        },
+        tag: {
+            backgroundColor: "grey"
+        },
+        text: {
+            color: "white"
+        },
+        caption: {
+            color: "white"
+        }
+    },
+    withLabel: true
 });
 map.addControl(layerFactory, 'top-left');
 ```

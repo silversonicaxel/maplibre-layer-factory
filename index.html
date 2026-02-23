@@ -28,7 +28,7 @@
       zoom: 2
     });
 
-    const layerFactory = new MapLibreLayerFactory({ orientation: "horizontal" });
+    const layerFactory = new MapLibreLayerFactory({ orientation: "horizontal", withLabel: true });
     map.addControl(layerFactory, 'top-left');
 
     map.on("load", () => {
@@ -42,7 +42,7 @@
             tileSize: 256,
             attribution: "Open Street Map"
         });
-        map.addSource("landcover", {
+        map.addSource("glc", {
             type: "raster",
             tiles: ["https://storage.googleapis.com/lcl_tiles/GLCLU2020/composite2020/{z}/{x}/{y}.png"],
             tileSize: 256,
@@ -50,17 +50,23 @@
         });
 
         map.addLayer({
-            id: "osm-base",
+            id: "osm",
             type: "raster",
             source: "osm",
-            layout: { visibility: "visible" },
+            layout: { visibility: "none" },
+            metadata: {
+              name: "OpenStreetMap",
+              caption: "30m"
+            }
         });
         map.addLayer({
-            id: "landcover-base",
+            id: "glc",
             type: "raster",
-            source: "landcover",
+            source: "glc",
             layout: { visibility: "visible" },
             metadata: {
+              name: "Global Land Cover",
+              caption: "10m",
               placeholder: 'https://placehold.co/40x40'
             }
         });

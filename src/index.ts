@@ -10,9 +10,18 @@ export interface MapLibreLayerFactoryOptions {
         default?: Partial<CSSStyleDeclaration>;
         selected?: Partial<CSSStyleDeclaration>;
     };
+    labelStyle?: {
+        element?: Partial<CSSStyleDeclaration>;
+        tag?: Partial<CSSStyleDeclaration>;
+        text?: Partial<CSSStyleDeclaration>;
+        caption?: Partial<CSSStyleDeclaration>;
+    };
+    withLabel?: boolean;
 }
 
 export interface MapLibreLayerMetadata {
+    name?: string;
+    caption?: string;
     placeholder?: string;
 }
 
@@ -22,6 +31,7 @@ export class MapLibreLayerFactory implements IControl {
     #toggle?: HTMLDivElement;
     #panel?: HTMLDivElement;
     #panelLayers?: HTMLDivElement;
+    #panelLabel?: HTMLDivElement;
     #isOpen: boolean = false;
     #orientation: MapLibreLayerFactoryOrientation;
     #panelStyle: Partial<CSSStyleDeclaration>;
@@ -29,6 +39,13 @@ export class MapLibreLayerFactory implements IControl {
         default?: Partial<CSSStyleDeclaration>;
         selected?: Partial<CSSStyleDeclaration>;
     };
+    #labelStyle: {
+        element?: Partial<CSSStyleDeclaration>;
+        tag?: Partial<CSSStyleDeclaration>;
+        text?: Partial<CSSStyleDeclaration>;
+        caption?: Partial<CSSStyleDeclaration>;
+    };
+    #withLabel: boolean;
     #boundUpdate: () => void;
 
     constructor(options: MapLibreLayerFactoryOptions = {}) {
@@ -38,11 +55,19 @@ export class MapLibreLayerFactory implements IControl {
             default: {},
             selected: {}
         };
+        this.#labelStyle = options.labelStyle || {
+            element: {},
+            tag: {},
+            text: {},
+            caption: {}
+        };
+        this.#withLabel = options.withLabel || false;
         this.#boundUpdate = this.#setLayerList.bind(this);
     }
 
     #createContainer() {
         const container = document.createElement('div');
+        container.id = 'layer-factory-container';
         container.className = 'maplibregl-ctrl';
 
         Object.assign(container.style, {
@@ -74,6 +99,7 @@ export class MapLibreLayerFactory implements IControl {
 
     #createToggle() {
         const toggle = document.createElement('div');
+        toggle.id = 'layer-factory-toggle';
         toggle.className = 'maplibregl-ctrl-group';
 
         const toggleButton = document.createElement('button');
@@ -93,16 +119,19 @@ export class MapLibreLayerFactory implements IControl {
 
     #createPanel() {
         const panel = document.createElement('div');
+        panel.id = 'layer-factory-panel';
         panel.className = 'maplibregl-ctrl-group';
 
         Object.assign(panel.style,
             {
                 gap: '8px',
+                padding: '4px',
             },
             this.#panelStyle,
             {
                 display: 'none',
                 flexDirection: 'column',
+                maxWidth: '220px',
                 overflowY: 'auto',
                 width: 'auto'
             },
@@ -113,6 +142,7 @@ export class MapLibreLayerFactory implements IControl {
 
     #createPanelLayers() {
         const panelLayers = document.createElement('div');
+        panelLayers.id = 'layer-factory-panel-layers';
 
         Object.assign(panelLayers.style, {
             display: 'flex',
@@ -125,6 +155,83 @@ export class MapLibreLayerFactory implements IControl {
         });
 
         return panelLayers;
+    }
+
+    #createPanelLabel() {
+        const panelLabel = document.createElement('div');
+        panelLabel.id = 'layer-factory-panel-label';
+        Object.assign(panelLabel.style,
+            {
+                backgroundColor: '#007cbf',
+                borderRadius: '4px',
+                color: '#fff',
+                fontSize: '14px',
+                fontWeight: '600',
+                margin: '0',
+                padding: '8px',
+            },
+            this.#labelStyle.element,
+            {
+                maxWidth: '100%',
+            }
+        );
+
+        const panelLabelContent = document.createElement('div');
+        panelLabelContent.id = 'layer-factory-panel-label-content';
+        Object.assign(panelLabelContent.style, {
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+        });
+
+        const panelLabelTag = document.createElement('span');
+        panelLabelTag.id = 'layer-factory-panel-label-tag';
+        Object.assign(panelLabelTag.style,
+            {
+                backgroundColor: "#eee",
+                borderRadius: "4px",
+                color: "#000",
+                fontWeight: "500",
+                padding: "4px",
+            },
+            this.#labelStyle.tag,
+            {
+                display: 'inline-block',
+            }
+        );
+
+        const panelLabelText = document.createElement('span');
+        panelLabelText.id = 'layer-factory-panel-label-text';
+        Object.assign(panelLabelText.style,
+            {
+                paddingLeft: '8px'
+            },
+            this.#labelStyle.text,
+            {
+                flex: '0 0 auto',
+            }
+        );
+
+        const panelLabelCaption = document.createElement('span');
+        panelLabelCaption.id = 'layer-factory-panel-label-caption';
+        Object.assign(panelLabelCaption.style,
+            {
+                fontWeight: '500',
+                paddingLeft: '8px'
+            },
+            this.#labelStyle.caption,
+            {
+                flex: '1 1 auto',
+                minWidth: '0',
+            }
+        );
+
+        panelLabel.appendChild(panelLabelContent);
+        panelLabelContent.appendChild(panelLabelTag);
+        panelLabelContent.appendChild(panelLabelText);
+        panelLabelContent.appendChild(panelLabelCaption);
+
+        return panelLabel;
     }
 
     #togglePanel() {
@@ -144,12 +251,10 @@ export class MapLibreLayerFactory implements IControl {
             return;
         }
 
-        const firstLayerId = layers[0]?.id;
-        layers.forEach((layer) => {
-            const isSelected = layer.id === firstLayerId;
-            const visibility = isSelected ? 'visible' : 'none';
-            this.#map!.setLayoutProperty(layer.id, 'visibility', visibility);
-        });
+        const layer = layers.find(layer => layer.id === layers[0]?.id);
+        if (layer) {
+            this.#selectLayer(layer.id);
+        }
     }
 
     #setLayerList() {
@@ -168,7 +273,6 @@ export class MapLibreLayerFactory implements IControl {
         Object.assign(this.#panelLayers.style,
             {
                 gap: '8px',
-                padding: '4px',
             },
             this.#panelStyle,
         );
@@ -179,7 +283,7 @@ export class MapLibreLayerFactory implements IControl {
 
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.title = layer.id;
+            btn.title = metadata.name || layer.id;
             btn.setAttribute('data-id', layer.id);
 
             this.#setButtonContent(layer, btn, placeholder);
@@ -261,6 +365,13 @@ export class MapLibreLayerFactory implements IControl {
 
             this.#map!.setLayoutProperty(layer.id, 'visibility', visibility);
 
+            if (isSelected && this.#withLabel && this.#panelLabel) {
+                const metadata = (layer.metadata || {}) as MapLibreLayerMetadata;
+                this.#panelLabel.querySelector('[id="layer-factory-panel-label-tag"]')!.innerHTML = metadata.name ? layer.id : "";
+                this.#panelLabel.querySelector('[id="layer-factory-panel-label-text"]')!.innerHTML = metadata.name ?? layer.id;
+                this.#panelLabel.querySelector('[id="layer-factory-panel-label-caption"]')!.innerHTML = metadata.caption ? ` (${metadata.caption})` : "";
+            }
+
             const btn = this.#panelLayers!.querySelector(`[data-id="${layer.id}"]`) as HTMLButtonElement;
             if (btn) {
                 btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
@@ -281,13 +392,20 @@ export class MapLibreLayerFactory implements IControl {
     onAdd(map: Map): HTMLElement {
         this.#map = map;
         this.#container = this.#createContainer();
-        this.#toggle = this.#createToggle();
-        this.#panel = this.#createPanel();
-        this.#panelLayers = this.#createPanelLayers();
 
-        this.#panel.appendChild(this.#panelLayers);
+        this.#toggle = this.#createToggle();
         this.#container.appendChild(this.#toggle);
+
+        this.#panel = this.#createPanel();
         this.#container.appendChild(this.#panel);
+
+        this.#panelLayers = this.#createPanelLayers();
+        this.#panel.appendChild(this.#panelLayers);
+
+        if (this.#withLabel) {
+            this.#panelLabel = this.#createPanelLabel();
+            this.#panel.appendChild(this.#panelLabel);
+        }
 
         this.#map.on('styledata', this.#boundUpdate);
 
