@@ -9,6 +9,7 @@ The style is based on squared buttons that can be selected/deselected to show/hi
 - Orientation of layers buttons (horizontal, vertical)
 - Placeholder support for layers buttons
 - Custom styling for panel and layer buttons
+- Label and caption for layer metadata
 
 ## Installation
 
