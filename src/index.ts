@@ -251,9 +251,9 @@ export class MapLibreLayerFactory implements IControl {
             return;
         }
 
-        const layer = layers.find(layer => layer.id === layers[0]?.id);
-        if (layer) {
-            this.#selectLayer(layer.id);
+        const selectedLayer = layers.find(layer => this.#map!.getLayoutProperty(layer.id, 'visibility') === 'visible') || layers[0];
+        if (selectedLayer) {
+            this.#selectLayer(selectedLayer.id);
         }
     }
 
