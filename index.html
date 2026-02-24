@@ -28,7 +28,11 @@
       zoom: 2
     });
 
-    const layerFactory = new MapLibreLayerFactory({ orientation: "horizontal", withLabel: true });
+    const layerFactory = new MapLibreLayerFactory({
+      orientation: "horizontal",
+      withLabel: true,
+      labelStyle: { tag: { textTransform: "uppercase" } }
+    });
     map.addControl(layerFactory, 'top-left');
 
     map.on("load", () => {
