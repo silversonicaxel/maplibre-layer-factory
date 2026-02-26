@@ -369,7 +369,7 @@ export class MapLibreLayerFactory implements IControl {
                 const metadata = (layer.metadata || {}) as MapLibreLayerMetadata;
                 this.#panelLabel.querySelector('[id="layer-factory-panel-label-tag"]')!.innerHTML = metadata.name ? layer.id : "";
                 this.#panelLabel.querySelector('[id="layer-factory-panel-label-text"]')!.innerHTML = metadata.name ?? layer.id;
-                this.#panelLabel.querySelector('[id="layer-factory-panel-label-caption"]')!.innerHTML = metadata.caption ? ` (${metadata.caption})` : "";
+                this.#panelLabel.querySelector('[id="layer-factory-panel-label-caption"]')!.innerHTML = metadata.caption ? `(${metadata.caption})` : "";
             }
 
             const btn = this.#panelLayers!.querySelector(`[data-id="${layer.id}"]`) as HTMLButtonElement;
