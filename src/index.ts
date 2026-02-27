@@ -126,12 +126,12 @@ export class MapLibreLayerFactory implements IControl {
             {
                 gap: '8px',
                 padding: '4px',
+                maxWidth: '220px',
             },
             this.#panelStyle,
             {
                 display: 'none',
                 flexDirection: 'column',
-                maxWidth: '220px',
                 overflowY: 'auto',
                 width: 'auto'
             },
