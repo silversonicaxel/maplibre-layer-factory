@@ -125,15 +125,16 @@ export class MapLibreLayerFactory implements IControl {
         Object.assign(panel.style,
             {
                 gap: '8px',
+                minWidth: '220px',
                 padding: '4px',
-                maxWidth: '220px',
             },
             this.#panelStyle,
             {
                 display: 'none',
                 flexDirection: 'column',
-                overflowY: 'auto',
-                width: 'auto'
+                maxWidth: 'none',
+                overflowY: 'hidden',
+                width: 'max-content'
             },
         );
 
@@ -147,9 +148,11 @@ export class MapLibreLayerFactory implements IControl {
         Object.assign(panelLayers.style, {
             display: 'flex',
             flexDirection: this.#orientation === 'vertical' ? 'column' : 'row',
+            flexWrap: 'nowrap',
             gap: '8px',
             margin: '0',
             maxHeight: '200px',
+            overflowX: 'hidden',
             overflowY: 'auto',
             width: 'auto'
         });
@@ -172,13 +175,20 @@ export class MapLibreLayerFactory implements IControl {
             },
             this.#labelStyle.element,
             {
-                maxWidth: '100%',
+                boxSizing: 'border-box',
+                contain: 'inline-size',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+                width: '100%',
             }
         );
 
         const panelLabelContent = document.createElement('div');
         panelLabelContent.id = 'layer-factory-panel-label-content';
         Object.assign(panelLabelContent.style, {
+            flex: '1',
+            minWidth: '0',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
@@ -308,6 +318,7 @@ export class MapLibreLayerFactory implements IControl {
                     boxSizing: 'border-box',
                     cursor: 'pointer',
                     display: 'flex',
+                    flexShrink: '0',
                     height: '42px',
                     justifyContent: 'center',
                     padding: placeholder ? '0' : '4px 8px',
