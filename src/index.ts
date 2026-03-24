@@ -16,6 +16,7 @@ export interface MapLibreLayerFactoryOptions {
         text?: Partial<CSSStyleDeclaration>;
         caption?: Partial<CSSStyleDeclaration>;
     };
+    footer?: HTMLElement;
     withLabel?: boolean;
 }
 
@@ -45,6 +46,7 @@ export class MapLibreLayerFactory implements IControl {
         text?: Partial<CSSStyleDeclaration>;
         caption?: Partial<CSSStyleDeclaration>;
     };
+    #footer?: HTMLElement;
     #withLabel: boolean;
     #boundUpdate: () => void;
 
@@ -61,6 +63,7 @@ export class MapLibreLayerFactory implements IControl {
             text: {},
             caption: {}
         };
+        this.#footer = options.footer;
         this.#withLabel = options.withLabel || false;
         this.#boundUpdate = this.#setLayerList.bind(this);
     }
@@ -124,6 +127,7 @@ export class MapLibreLayerFactory implements IControl {
 
         Object.assign(panel.style,
             {
+                fontSize: '14px',
                 gap: '8px',
                 padding: '4px',
                 maxWidth: '220px',
@@ -165,7 +169,6 @@ export class MapLibreLayerFactory implements IControl {
                 backgroundColor: '#007cbf',
                 borderRadius: '4px',
                 color: '#fff',
-                fontSize: '14px',
                 fontWeight: '600',
                 margin: '0',
                 padding: '8px',
@@ -405,6 +408,10 @@ export class MapLibreLayerFactory implements IControl {
         if (this.#withLabel) {
             this.#panelLabel = this.#createPanelLabel();
             this.#panel.appendChild(this.#panelLabel);
+        }
+
+        if (this.#footer) {
+            this.#panel.appendChild(this.#footer);
         }
 
         this.#map.on('styledata', this.#boundUpdate);
