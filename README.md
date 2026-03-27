@@ -54,6 +54,9 @@ npm install maplibre-layer-factory
 The example below shows how to use the MapLibre Layer Factory to create a control with all available options.
 
 ```javascript
+import { MapLibreLayerFactory } from "maplibre-layer-factory";
+import "maplibre-layer-factory/style.css";
+
 const layerFactory = new MapLibreLayerFactory({
     orientation: "vertical",
     panelStyle: {
