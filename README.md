@@ -1,6 +1,6 @@
 # maplibre-layer-factory
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 MapLibre Layer Factory is a plugin to customise layers in MapLibre GL JS, in a simple but flexible way.
@@ -107,6 +107,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   <tbody>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="http://www.alessandrorabitti.com/"><img src="https://avatars.githubusercontent.com/u/6851815?v=4?s=100" width="100px;" alt="Alessandro Rabitti"/><br /><sub><b>Alessandro Rabitti</b></sub></a><br /><a href="https://github.com/silversonicaxel/maplibre-layer-factory/commits?author=silversonicaxel" title="Code">💻</a> <a href="#a11y-silversonicaxel" title="Accessibility">️️️️♿️</a> <a href="https://github.com/silversonicaxel/maplibre-layer-factory/commits?author=silversonicaxel" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://studiorabota.com"><img src="https://avatars.githubusercontent.com/u/8339389?v=4?s=100" width="100px;" alt="Vincent Kranendonk"/><br /><sub><b>Vincent Kranendonk</b></sub></a><br /><a href="#design-studiorabota" title="Design">🎨</a> <a href="#ideas-studiorabota" title="Ideas, Planning, & Feedback">🤔</a></td>
     </tr>
   </tbody>
 </table>
