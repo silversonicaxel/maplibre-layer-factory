@@ -1,0 +1,28 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "commitType": "docs",
+  "commitConvention": "angular",
+  "contributors": [
+    {
+      "login": "silversonicaxel",
+      "name": "Alessandro Rabitti",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6851815?v=4",
+      "profile": "http://www.alessandrorabitti.com/",
+      "contributions": [
+        "code",
+        "a11y",
+        "doc"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "skipCi": true,
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "projectName": "maplibre-layer-factory",
+  "projectOwner": "silversonicaxel"
+}
