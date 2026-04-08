@@ -22,6 +22,7 @@ export interface MapLibreLayerMetadata {
     name?: string;
     caption?: string;
     placeholder?: string;
+    ignore?: boolean;
 }
 
 export class MapLibreLayerFactory implements IControl {
@@ -288,7 +289,10 @@ export class MapLibreLayerFactory implements IControl {
 
         layers.forEach((layer) => {
             const metadata = (layer.metadata || {}) as MapLibreLayerMetadata;
-            const placeholder = metadata.placeholder;
+            const { placeholder, ignore } = metadata;
+            if (ignore) {
+                return;
+            }
 
             const btn = document.createElement('button');
             btn.type = 'button';
