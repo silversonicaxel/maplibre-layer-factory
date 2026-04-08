@@ -13,6 +13,7 @@ The style is based on squared buttons that can be selected/deselected to show/hi
 - Placeholder support for layers buttons
 - Custom styling for panel and layer buttons
 - Label and caption for layer metadata
+- Possibility to ignore a layer
 
 ## Installation
 
@@ -43,6 +44,7 @@ npm install maplibre-layer-factory
 | `metadata.placeholder` | string | undefined | URL to placeholder image for layer button | No |
 | `metadata.name` | string | undefined | Name of the layer | No |
 | `metadata.caption` | string | undefined | Caption of the layer | No |
+| `metadata.ignore` | boolean | false | Ignore layer | No |
 
 ## Plugin Html Structure
 
