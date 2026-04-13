@@ -1,11 +1,12 @@
 # maplibre-layer-factory
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 MapLibre Layer Factory is a plugin to customise layers in MapLibre GL JS, in a simple but flexible way.
 
 The style is based on squared buttons that can be selected/deselected to show/hide layers, only one at the time.
+
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 ## Features
 
