@@ -251,13 +251,21 @@ export class MapLibreLayerFactory implements IControl {
         }
     }
 
+    #getSelectableLayers() {
+        const allLayers = this.#map?.getStyle()?.layers ?? [];
+        return allLayers.filter(layer => {
+            const metadata = (layer.metadata || {}) as MapLibreLayerMetadata;
+            return !metadata.ignore;
+        });
+    }
+
     #enforceOneLayerSelection() {
         if (!this.#map) {
             return;
         }
 
-        const layers = this.#map.getStyle()?.layers;
-        if (!layers || layers.length === 0) {
+        const layers = this.#getSelectableLayers();
+        if (layers.length === 0) {
             return;
         }
 
@@ -368,12 +376,7 @@ export class MapLibreLayerFactory implements IControl {
             return;
         }
 
-        const style = this.#map.getStyle();
-        if (!style || !style.layers) {
-            return;
-        }
-
-        style.layers.forEach((layer) => {
+        this.#getSelectableLayers().forEach((layer) => {
             const isSelected = layer.id === layerId;
             const visibility = isSelected ? 'visible' : 'none';
 
