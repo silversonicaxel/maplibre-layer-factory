@@ -443,7 +443,6 @@ export class MapLibreLayerFactory implements IControl {
             return;
         }
 
-        // Save which groups the user has expanded before clearing DOM
         const openGroups = new Set<string>();
         this.#panelOverlays.querySelectorAll('details[data-group]').forEach(el => {
             if ((el as HTMLDetailsElement).open) {
@@ -466,7 +465,6 @@ export class MapLibreLayerFactory implements IControl {
 
         this.#panelOverlays.style.display = 'flex';
 
-        // Divider — first child, appears/disappears with section
         const divider = document.createElement('hr');
         Object.assign(divider.style, {
             border: 'none',
@@ -476,12 +474,10 @@ export class MapLibreLayerFactory implements IControl {
         });
         this.#panelOverlays.appendChild(divider);
 
-        // Ungrouped overlays first (flat, always visible)
         overlayLayers
             .filter(layer => !(layer.metadata as MapLibreLayerMetadata)?.group)
             .forEach(layer => this.#panelOverlays!.appendChild(this.#createOverlayRow(layer)));
 
-        // Grouped overlays — one <details> per unique group name, preserving layer order
         const groups: Record<string, LayerSpecification[]> = {};
         overlayLayers.forEach(layer => {
             const group = (layer.metadata as MapLibreLayerMetadata)?.group;
