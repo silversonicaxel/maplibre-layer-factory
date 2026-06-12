@@ -18,6 +18,20 @@
     import { MapLibreLayerFactory } from './src/index.ts';
     import './src/index.css';
 
+    function createCirclePolygon(centerLon, centerLat, radiusLon, radiusLat, points = 32) {
+        const coords = [];
+        for (let i = 0; i <= points; i++) {
+            const angle = (i * 2 * Math.PI) / points;
+            const lon = centerLon + radiusLon * Math.cos(angle);
+            const lat = centerLat + radiusLat * Math.sin(angle);
+            coords.push([lon, lat]);
+        }
+        return {
+            type: "Polygon",
+            coordinates: [coords]
+        };
+    }
+
     const map = new Map({
       container: 'map',
       style: {
@@ -25,8 +39,8 @@
         sources: {},
         layers: []
       },
-      center: [0, 0],
-      zoom: 2
+      center: [11.5, 44.2],
+      zoom: 7.5
     });
 
     const layerFactory = new MapLibreLayerFactory({
@@ -53,7 +67,7 @@
             tileSize: 256,
             attribution: "Global Land Cover and Land Use 2000 and 2020"
         });
-        map.addSource("poly", {
+        map.addSource("italy", {
             type: "geojson",
             data: {
             "geometry": {
@@ -83,6 +97,36 @@
             "type": "Feature"
         }
         });
+        map.addSource("rimini-seaside", {
+            type: "geojson",
+            data: {
+                type: "Feature",
+                geometry: createCirclePolygon(12.8653, 44.0576, 0.051, 0.037),
+                properties: {
+                    name: "Rimini Seaside"
+                }
+            }
+        });
+        map.addSource("reggio-emilia-mountain", {
+            type: "geojson",
+            data: {
+                type: "Feature",
+                geometry: createCirclePolygon(10.4, 44.3, 0.051, 0.037),
+                properties: {
+                    name: "Reggio Emilia Mountain Area"
+                }
+            }
+        });
+        map.addSource("bologna", {
+            type: "geojson",
+            data: {
+                type: "Feature",
+                geometry: createCirclePolygon(11.3426, 44.4949, 0.051, 0.037),
+                properties: {
+                    name: "Bologna"
+                }
+            }
+        });
 
         map.addLayer({
             id: "osm",
@@ -106,11 +150,63 @@
             }
         });
         map.addLayer({
-            id: "poly",
+            id: "italy",
             type: "line",
-            source: "poly",
-            paint: { "line-color": "#007cbf", "line-width": 4 },
-            metadata: { ignore: true },
+            source: "italy",
+            paint: { "line-color": "#ff6600", "line-width": 2 },
+            layout: { visibility: "visible" },
+            metadata: {
+                overlay: true,
+                name: "Italy"
+            }
+        });
+        map.addLayer({
+            id: "rimini-seaside",
+            type: "fill",
+            source: "rimini-seaside",
+            paint: {
+                "fill-color": "#007cbf",
+                "fill-opacity": 0.6,
+                "fill-outline-color": "#ffffff"
+            },
+            layout: { visibility: "visible" },
+            metadata: {
+                overlay: true,
+                group: "Emilia Romagna",
+                name: "Rimini Seaside"
+            }
+        });
+        map.addLayer({
+            id: "reggio-emilia-mountain",
+            type: "fill",
+            source: "reggio-emilia-mountain",
+            paint: {
+                "fill-color": "#2ca02c",
+                "fill-opacity": 0.6,
+                "fill-outline-color": "#ffffff"
+            },
+            layout: { visibility: "visible" },
+            metadata: {
+                overlay: true,
+                group: "Emilia Romagna",
+                name: "Reggio Emilia Mountain Area"
+            }
+        });
+        map.addLayer({
+            id: "bologna",
+            type: "fill",
+            source: "bologna",
+            paint: {
+                "fill-color": "#d62728",
+                "fill-opacity": 0.6,
+                "fill-outline-color": "#ffffff"
+            },
+            layout: { visibility: "visible" },
+            metadata: {
+                overlay: true,
+                group: "Emilia Romagna",
+                name: "Bologna"
+            }
         });
     });
   </script>

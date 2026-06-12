@@ -15,6 +15,9 @@ The style is based on squared buttons that can be selected/deselected to show/hi
 - Custom styling for panel and layer buttons
 - Label and caption for layer metadata
 - Possibility to ignore a layer
+- Support for overlay layers (multi-select checkboxes rendered separately from base layers)
+- Grouping of overlays under collapsible accordion sections
+- Custom styling for overlay panels, checkbox rows, labels, and group headers
 
 ## Installation
 
@@ -37,6 +40,10 @@ npm install maplibre-layer-factory
 | `labelStyle.text`| CSSStyleDeclaration | {} | Custom styling for label text | No |
 | `labelStyle.caption`| CSSStyleDeclaration | {} | Custom styling for label caption | No |
 | `withLabel`| boolean | false | Show label | No |
+| `overlayStyle.panel`| CSSStyleDeclaration | {} | Custom styling for the overlay panel wrapping container | No |
+| `overlayStyle.row`| CSSStyleDeclaration | {} | Custom styling for each overlay row | No |
+| `overlayStyle.label`| CSSStyleDeclaration | {} | Custom styling for each overlay label text | No |
+| `overlayStyle.groupHeader`| CSSStyleDeclaration | {} | Custom styling for overlay accordion summary header | No |
 
 ### Layer Configuration Object
 
@@ -46,6 +53,8 @@ npm install maplibre-layer-factory
 | `metadata.name` | string | undefined | Name of the layer | No |
 | `metadata.caption` | string | undefined | Caption of the layer | No |
 | `metadata.ignore` | boolean | false | Ignore layer | No |
+| `metadata.overlay` | boolean | false | Mark layer as overlay (displays as checklist/accordion instead of radio selector) | No |
+| `metadata.group` | string | undefined | Optional group name for bundling overlays under an accordion | No |
 
 ## Plugin Html Structure
 
@@ -54,6 +63,7 @@ npm install maplibre-layer-factory
     - panel
         - panel layers
         - panel label
+        - panel overlays
 
 ## Example
 
@@ -94,7 +104,21 @@ const layerFactory = new MapLibreLayerFactory({
             color: "white"
         }
     },
-    withLabel: true
+    withLabel: true,
+    overlayStyle: {
+        panel: {
+            gap: "6px"
+        },
+        row: {
+            padding: "6px 12px"
+        },
+        label: {
+            fontWeight: "bold"
+        },
+        groupHeader: {
+            fontSize: "14px"
+        }
+    }
 });
 map.addControl(layerFactory, 'top-left');
 ```

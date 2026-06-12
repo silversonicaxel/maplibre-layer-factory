@@ -16,6 +16,12 @@ export interface MapLibreLayerFactoryOptions {
         caption?: Partial<CSSStyleDeclaration>;
     };
     withLabel?: boolean;
+    overlayStyle?: {
+        panel?: Partial<CSSStyleDeclaration>;
+        row?: Partial<CSSStyleDeclaration>;
+        label?: Partial<CSSStyleDeclaration>;
+        groupHeader?: Partial<CSSStyleDeclaration>;
+    };
 }
 
 export interface MapLibreLayerMetadata {
@@ -23,6 +29,8 @@ export interface MapLibreLayerMetadata {
     caption?: string;
     placeholder?: string;
     ignore?: boolean;
+    overlay?: boolean;
+    group?: string;
 }
 
 export class MapLibreLayerFactory implements IControl {
@@ -46,6 +54,13 @@ export class MapLibreLayerFactory implements IControl {
         caption?: Partial<CSSStyleDeclaration>;
     };
     #withLabel: boolean;
+    #panelOverlays?: HTMLDivElement;
+    #overlayStyle: {
+        panel?: Partial<CSSStyleDeclaration>;
+        row?: Partial<CSSStyleDeclaration>;
+        label?: Partial<CSSStyleDeclaration>;
+        groupHeader?: Partial<CSSStyleDeclaration>;
+    };
     #boundUpdate: () => void;
 
     constructor(options: MapLibreLayerFactoryOptions = {}) {
@@ -62,7 +77,8 @@ export class MapLibreLayerFactory implements IControl {
             caption: {}
         };
         this.#withLabel = options.withLabel || false;
-        this.#boundUpdate = this.#setLayerList.bind(this);
+        this.#overlayStyle = options.overlayStyle || {};
+        this.#boundUpdate = this.#updatePanel.bind(this);
     }
 
     #createContainer() {
@@ -160,6 +176,19 @@ export class MapLibreLayerFactory implements IControl {
         return panelLayers;
     }
 
+    #createPanelOverlays() {
+        const panelOverlays = document.createElement('div');
+        panelOverlays.id = 'layer-factory-panel-overlays';
+        Object.assign(panelOverlays.style, {
+            gap: '4px',
+            padding: '4px 0',
+        }, this.#overlayStyle.panel, {
+            display: 'none',
+            flexDirection: 'column',
+        });
+        return panelOverlays;
+    }
+
     #createPanelLabel() {
         const panelLabel = document.createElement('div');
         panelLabel.id = 'layer-factory-panel-label';
@@ -255,7 +284,7 @@ export class MapLibreLayerFactory implements IControl {
         const allLayers = this.#map?.getStyle()?.layers ?? [];
         return allLayers.filter(layer => {
             const metadata = (layer.metadata || {}) as MapLibreLayerMetadata;
-            return !metadata.ignore;
+            return !metadata.ignore && !metadata.overlay;
         });
     }
 
@@ -297,8 +326,8 @@ export class MapLibreLayerFactory implements IControl {
 
         layers.forEach((layer) => {
             const metadata = (layer.metadata || {}) as MapLibreLayerMetadata;
-            const { placeholder, ignore = false } = metadata;
-            if (ignore) {
+            const { placeholder, ignore = false, overlay = false } = metadata;
+            if (ignore || overlay) {
                 return;
             }
 
@@ -371,6 +400,119 @@ export class MapLibreLayerFactory implements IControl {
         }
     }
 
+    #createOverlayRow(layer: LayerSpecification) {
+        const metadata = (layer.metadata || {}) as MapLibreLayerMetadata;
+        const visibility = this.#map!.getLayoutProperty(layer.id, 'visibility') ?? 'visible';
+
+        const rowLabel = document.createElement('label');
+        Object.assign(rowLabel.style, {
+            alignItems: 'center',
+            cursor: 'pointer',
+            display: 'flex',
+            fontSize: '13px',
+            gap: '8px',
+            padding: '4px 8px',
+        }, this.#overlayStyle.row);
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = visibility === 'visible';
+        checkbox.setAttribute('data-id', layer.id);
+        checkbox.onchange = () => {
+            if (!this.#map) return;
+            this.#map.setLayoutProperty(layer.id, 'visibility', checkbox.checked ? 'visible' : 'none');
+        };
+
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = metadata.name || layer.id;
+        Object.assign(nameSpan.style, this.#overlayStyle.label);
+
+        rowLabel.appendChild(checkbox);
+        rowLabel.appendChild(nameSpan);
+
+        return rowLabel;
+    }
+
+    #setOverlayList() {
+        if (!this.#map || !this.#panelOverlays) {
+            return;
+        }
+
+        const style = this.#map.getStyle();
+        if (!style) {
+            return;
+        }
+
+        // Save which groups the user has expanded before clearing DOM
+        const openGroups = new Set<string>();
+        this.#panelOverlays.querySelectorAll('details[data-group]').forEach(el => {
+            if ((el as HTMLDetailsElement).open) {
+                openGroups.add(el.getAttribute('data-group')!);
+            }
+        });
+
+        this.#panelOverlays.innerHTML = '';
+
+        const allLayers = style.layers ?? [];
+        const overlayLayers = allLayers.filter(layer => {
+            const metadata = (layer.metadata || {}) as MapLibreLayerMetadata;
+            return !metadata.ignore && metadata.overlay === true;
+        });
+
+        if (overlayLayers.length === 0) {
+            this.#panelOverlays.style.display = 'none';
+            return;
+        }
+
+        this.#panelOverlays.style.display = 'flex';
+
+        // Divider — first child, appears/disappears with section
+        const divider = document.createElement('hr');
+        Object.assign(divider.style, {
+            border: 'none',
+            borderTop: '1px solid #ddd',
+            margin: '4px 0',
+            width: '100%',
+        });
+        this.#panelOverlays.appendChild(divider);
+
+        // Ungrouped overlays first (flat, always visible)
+        overlayLayers
+            .filter(layer => !(layer.metadata as MapLibreLayerMetadata)?.group)
+            .forEach(layer => this.#panelOverlays!.appendChild(this.#createOverlayRow(layer)));
+
+        // Grouped overlays — one <details> per unique group name, preserving layer order
+        const groups: Record<string, LayerSpecification[]> = {};
+        overlayLayers.forEach(layer => {
+            const group = (layer.metadata as MapLibreLayerMetadata)?.group;
+            if (!group) return;
+            groups[group] ??= [];
+            groups[group]!.push(layer);
+        });
+
+        Object.entries(groups).forEach(([groupName, layers]) => {
+            const details = document.createElement('details');
+            details.setAttribute('data-group', groupName);
+            if (openGroups.has(groupName)) details.open = true;
+
+            const summary = document.createElement('summary');
+            summary.textContent = groupName;
+            Object.assign(summary.style, {
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: '600',
+                listStyle: 'none',
+                padding: '4px 8px',
+                userSelect: 'none',
+            }, this.#overlayStyle.groupHeader);
+            details.appendChild(summary);
+
+            layers.forEach(layer => details.appendChild(this.#createOverlayRow(layer)));
+
+            this.#panelOverlays!.appendChild(details);
+        });
+    }
+
     #selectLayer(layerId: string) {
         if (!this.#map || !this.#panel || !this.#panelLayers) {
             return;
@@ -404,6 +546,12 @@ export class MapLibreLayerFactory implements IControl {
     #initializePanelLayers() {
         this.#enforceOneLayerSelection();
         this.#setLayerList();
+        this.#setOverlayList();
+    }
+
+    #updatePanel() {
+        this.#setLayerList();
+        this.#setOverlayList();
     }
 
     onAdd(map: Map): HTMLElement {
@@ -423,6 +571,9 @@ export class MapLibreLayerFactory implements IControl {
             this.#panelLabel = this.#createPanelLabel();
             this.#panel.appendChild(this.#panelLabel);
         }
+
+        this.#panelOverlays = this.#createPanelOverlays();
+        this.#panel.appendChild(this.#panelOverlays);
 
         this.#map.on('styledata', this.#boundUpdate);
 
