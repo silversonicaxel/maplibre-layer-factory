@@ -19,15 +19,12 @@ export default defineConfig({
     copyCss(resolve(__dirname, 'src/index.css'), resolve(__dirname, 'dist/maplibre-layer-factory.css')),
   ],
   build: {
-    emptyOutDir: true,
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       fileName: 'maplibre-layer-factory',
-      formats: ['es', 'umd'],
       name: 'MapLibreLayerFactory',
     },
-    minify: 'esbuild',
-    rollupOptions: {
+    rolldownOptions: {
       external: ['maplibre-gl'],
       output: {
         globals: {
