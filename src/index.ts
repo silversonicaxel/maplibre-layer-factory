@@ -308,7 +308,7 @@ export class MapLibreLayerFactory implements IControl {
 
         const selectedLayer = layers.find(layer => this.#map!.getLayoutProperty(layer.id, 'visibility') === 'visible') || layers[0];
         if (selectedLayer) {
-            this.#selectLayer(selectedLayer.id);
+            this.#selectLayer(selectedLayer.id, { forceEmit: true });
         }
     }
 
@@ -518,12 +518,17 @@ export class MapLibreLayerFactory implements IControl {
         });
     }
 
-    #selectLayer(layerId: string) {
+    #selectLayer(layerId: string, options: { forceEmit?: boolean } = {}) {
         if (!this.#map || !this.#panel || !this.#panelLayers) {
             return;
         }
 
-        this.#getSelectableLayers().forEach((layer) => {
+        const selectableLayers = this.#getSelectableLayers();
+        const wasAlreadySelected = selectableLayers.some(layer => layer.id === layerId
+            && (this.#map!.getLayoutProperty(layer.id, 'visibility') ?? 'visible') === 'visible'
+        );
+
+        selectableLayers.forEach((layer) => {
             const isSelected = layer.id === layerId;
             const visibility = isSelected ? 'visible' : 'none';
 
@@ -547,7 +552,9 @@ export class MapLibreLayerFactory implements IControl {
             }
         });
 
-        this.#emitLayerChange({ kind: 'base', id: layerId });
+        if (options.forceEmit || !wasAlreadySelected) {
+            this.#emitLayerChange({ kind: 'base', id: layerId });
+        }
     }
 
     #emitLayerChange(detail: MapLibreLayerChangeEvent) {
@@ -589,7 +596,7 @@ export class MapLibreLayerFactory implements IControl {
         this.#map.on('styledata', this.#boundUpdate);
 
         if (this.#map.isStyleLoaded()) {
-            this.#initializePanelLayers();
+            queueMicrotask(() => this.#initializePanelLayers());
         } else {
             this.#map.once('load', this.#initializePanelLayers.bind(this));
         }
