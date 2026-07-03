@@ -18,6 +18,7 @@ The style is based on squared buttons that can be selected/deselected to show/hi
 - Support for overlay layers (multi-select checkboxes rendered separately from base layers)
 - Grouping of overlays under collapsible accordion sections
 - Custom styling for overlay panels, checkbox rows, labels, and group headers
+- `layerchange` map event fired on base/overlay toggle
 
 ## Installation
 
@@ -55,6 +56,22 @@ npm install maplibre-layer-factory
 | `metadata.ignore` | boolean | false | Ignore layer | No |
 | `metadata.overlay` | boolean | false | Mark layer as overlay (displays as checklist/accordion instead of radio selector) | No |
 | `metadata.group` | string | undefined | Optional group name for bundling overlays under an accordion | No |
+
+## Events
+
+The control fires a `layerchange` event on map when base layer selected or overlay toggled.
+
+| Property | Type | Description |
+| - | - | - |
+| `kind` | "base" \| "overlay" | Which layer type changed |
+| `id` | string | Layer id |
+| `visible` | boolean | Overlay visibility (only for `kind: "overlay"`) |
+
+```javascript
+map.on('layerchange', (e) => {
+    console.log(e.kind, e.id, e.visible);
+});
+```
 
 ## Plugin Html Structure
 

@@ -33,6 +33,14 @@ export interface MapLibreLayerMetadata {
     group?: string;
 }
 
+export interface MapLibreLayerChangeEvent {
+    kind: 'base' | 'overlay';
+    id: string;
+    visible?: boolean;
+}
+
+export const MAPLIBRE_LAYER_FACTORY_CHANGE_EVENT = 'layerchange';
+
 export class MapLibreLayerFactory implements IControl {
     #map?: Map;
     #container?: HTMLDivElement;
@@ -421,6 +429,7 @@ export class MapLibreLayerFactory implements IControl {
         checkbox.onchange = () => {
             if (!this.#map) return;
             this.#map.setLayoutProperty(layer.id, 'visibility', checkbox.checked ? 'visible' : 'none');
+            this.#emitLayerChange({ kind: 'overlay', id: layer.id, visible: checkbox.checked });
         };
 
         const nameSpan = document.createElement('span');
@@ -537,6 +546,12 @@ export class MapLibreLayerFactory implements IControl {
                 }
             }
         });
+
+        this.#emitLayerChange({ kind: 'base', id: layerId });
+    }
+
+    #emitLayerChange(detail: MapLibreLayerChangeEvent) {
+        this.#map?.fire(MAPLIBRE_LAYER_FACTORY_CHANGE_EVENT, detail);
     }
 
     #initializePanelLayers() {
